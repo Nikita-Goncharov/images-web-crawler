@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     additional_text = "crypto coin memes".replace(" ", "+")
 
-    domains = [f"https://www.google.com/search?q={keyword.replace(' ', '+')}&tbm=isch" for keyword in keywords]
+    domains = [f"https://www.google.com/search?q={keyword.replace(' ', '+')}+{additional_text}&tbm=isch" for keyword in keywords]
 
     print(keywords, domains)
 
