@@ -1,4 +1,8 @@
 .idea/
+__pycache__/
 
+.env
+logos/
 logos_*/
+parsed_images/
 resulted_set/
