@@ -1,7 +1,7 @@
-import os
-import io
 import hashlib
+import io
 import logging
+import os
 from datetime import datetime
 
 import cairosvg
@@ -18,16 +18,16 @@ def render_svg_to_png_bytes(svg_path, dpi=96):
     Converts SVG to PNG in memory at the given DPI,
     returns PNG data as bytes.
     """
-    with open(svg_path, 'rb') as f:
+    with open(svg_path, "rb") as f:
         svg_data = f.read()
     png_data = cairosvg.svg2png(bytestring=svg_data, dpi=dpi)
     return png_data
 
 
 def get_image_size(image_path, dpi=96):
-    """  Try to open image, if it is .png, .jpg, .gif, 
+    """Try to open image, if it is .png, .jpg, .gif,
     else if .svg we are need to convert to .png
-    
+
     """
     try:
         img = Image.open(image_path)
@@ -39,9 +39,9 @@ def get_image_size(image_path, dpi=96):
 
 def is_image_valid(absolute_src: str) -> bool:
     try:
-        if ".webp" in absolute_src: # do not download .webp images
+        if ".webp" in absolute_src:  # do not download .webp images
             return False
-        
+
         w, h = get_image_size(absolute_src)
         if w > 240 and h > 240:
             return True
@@ -52,30 +52,30 @@ def is_image_valid(absolute_src: str) -> bool:
 
 
 @app.task
-def download_image(absolute_src: str, save_dir: str="parsed_images"):
+def download_image(absolute_src: str, save_dir: str = "parsed_images"):
     try:
         os.makedirs(save_dir, exist_ok=True)
         _, file_ext = os.path.splitext(absolute_src)  # get file extension from URL
-        
+
         # make correct file extension
         file_ext = file_ext.replace("?", " ").replace("#", " ").replace("&", " ")
         file_ext = file_ext.split(" ")[0]
         file_ext = file_ext if file_ext != ".jpeg" else ".jpg"
-        
+
         new_image_name = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
-        path = os.path.join(save_dir, f'{new_image_name}{file_ext}')
-        
+        path = os.path.join(save_dir, f"{new_image_name}{file_ext}")
+
         resp = requests.get(absolute_src, stream=True, timeout=5)
         resp.raise_for_status()
-        with open(path, 'wb') as f:
+        with open(path, "wb") as f:
             for chunk in resp.iter_content(chunk_size=8192):
                 f.write(chunk)
-                
+
         # check image, if not valid - delete
         if not is_image_valid(path):
             os.remove(path)
         else:
-            logging.log(logging.INFO, f"Found image for saving")
+            logging.log(logging.INFO, "Found image for saving")
     except Exception as ex:
         logging.log(logging.INFO, f"Error downloading: {absolute_src}: {ex}")
 
@@ -83,13 +83,14 @@ def download_image(absolute_src: str, save_dir: str="parsed_images"):
 def file_md5(path, chunk_size=8192):
     """Return MD5 hash (hex string) of a file."""
     md5 = hashlib.md5()
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         while True:
             data = f.read(chunk_size)
             if not data:
                 break
             md5.update(data)
     return md5.hexdigest()
+
 
 @app.task
 def remove_duplicates(path):
@@ -103,10 +104,10 @@ def remove_duplicates(path):
                 file_hash = file_md5(filepath)
                 if file_hash in seen_hashes:
                     # Duplicate detected
-                    print(f"[DUPLICATE] Removing {filepath} (same as {seen_hashes[file_hash]})")
+                    print(
+                        f"[DUPLICATE] Removing {filepath} (same as {seen_hashes[file_hash]})"
+                    )
                     os.remove(filepath)
                 else:
                     # First time we see this hash
                     seen_hashes[file_hash] = filepath
-
-

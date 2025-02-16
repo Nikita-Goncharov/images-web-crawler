@@ -32,8 +32,10 @@ crawler: CryptoCrawler | None = None
 class AddKeywordState(StatesGroup):
     waiting_for_keyword = State()
 
+
 class RemoveKeywordState(StatesGroup):
     waiting_for_keyword = State()
+
 
 kb_main = ReplyKeyboardMarkup(
     keyboard=[
@@ -41,7 +43,7 @@ kb_main = ReplyKeyboardMarkup(
         [KeyboardButton(text="Add Keyword"), KeyboardButton(text="Remove Keyword")],
         [KeyboardButton(text="Start Search"), KeyboardButton(text="Stop Search")],
     ],
-    resize_keyboard=True
+    resize_keyboard=True,
 )
 
 
@@ -70,7 +72,7 @@ async def cmd_start(message: Message):
             "4) Start Search - start the search\n"
             "5) Stop Search - stop the search\n"
         ),
-        reply_markup=kb_main
+        reply_markup=kb_main,
     )
 
 
@@ -80,10 +82,14 @@ async def show_keywords(message: Message):
     "Show Keywords" button: show current keywords.
     """
     if not global_keywords:
-        await message.answer("There are no keywords.", reply_markup=kb_main, parse_mode="html")
+        await message.answer(
+            "There are no keywords.", reply_markup=kb_main, parse_mode="html"
+        )
     else:
         text = ", ".join(sorted(global_keywords))
-        await message.answer(f"Current keywords:\n<b>{text}</b>", reply_markup=kb_main, parse_mode="html")
+        await message.answer(
+            f"Current keywords:\n<b>{text}</b>", reply_markup=kb_main, parse_mode="html"
+        )
 
 
 @dp.message(F.text.lower() == "add keyword")
@@ -112,7 +118,11 @@ async def start_search_button(message: Message):
     global crawler
 
     if not global_keywords:
-        await message.answer("There are no keywords. You should add first (button Add Keyword).", reply_markup=kb_main, parse_mode="html")
+        await message.answer(
+            "There are no keywords. You should add first (button Add Keyword).",
+            reply_markup=kb_main,
+            parse_mode="html",
+        )
         return
 
     # If the crawler is already running, stop it
@@ -130,8 +140,8 @@ async def start_search_button(message: Message):
         "Crawling started.\n"
         f"Keywords: {', '.join(keywords_list)}\n"
         "To stop crawling press: Stop Search",
-        reply_markup=kb_main, 
-        parse_mode="html"
+        reply_markup=kb_main,
+        parse_mode="html",
     )
 
 
@@ -154,10 +164,18 @@ async def process_add_keyword(message: Message, state: FSMContext):
     """
     word = message.text.strip().lower()
     if word in global_keywords:
-        await message.answer(f"Keyword <b>{word}</b> already in keywords list.", reply_markup=kb_main, parse_mode="html")
+        await message.answer(
+            f"Keyword <b>{word}</b> already in keywords list.",
+            reply_markup=kb_main,
+            parse_mode="html",
+        )
     else:
         global_keywords.add(word)
-        await message.answer(f"Added <b>{word}</b> to keywords list.", reply_markup=kb_main, parse_mode="html")
+        await message.answer(
+            f"Added <b>{word}</b> to keywords list.",
+            reply_markup=kb_main,
+            parse_mode="html",
+        )
 
     await state.clear()
 
@@ -170,9 +188,17 @@ async def process_remove_keyword(message: Message, state: FSMContext):
     word = message.text.strip().lower()
     if word in global_keywords:
         global_keywords.remove(word)
-        await message.answer(f"Removed <b>{word}</b> from keywords list.", reply_markup=kb_main, parse_mode="html")
+        await message.answer(
+            f"Removed <b>{word}</b> from keywords list.",
+            reply_markup=kb_main,
+            parse_mode="html",
+        )
     else:
-        await message.answer(f"Keyword <b>{word}</b> not in the list.", reply_markup=kb_main, parse_mode="html")
+        await message.answer(
+            f"Keyword <b>{word}</b> not in the list.",
+            reply_markup=kb_main,
+            parse_mode="html",
+        )
 
     await state.clear()
 
