@@ -12,7 +12,7 @@ from bs4.element import PageElement
 from tasks import download_image
 
 
-class CryptoCrawler:
+class Crawler:
     def __init__(self, keywords: list[str], text_to_keyword: str):
         self.keywords = set(keywords)
 
@@ -59,13 +59,6 @@ class CryptoCrawler:
         alt = re.sub(r"[^a-zA-Z0-9\s]+", " ", alt)
         title = re.sub(r"[^a-zA-Z0-9\s]+", " ", title)
         filename = re.sub(r"[^a-zA-Z0-9\s]+", " ", filename)
-
-        # If desired, you can also collapse the extra spaces  # TODO: remove ???
-        alt = re.sub(r"\s+", " ", alt).strip()
-        title = re.sub(r"\s+", " ", title).strip()
-        filename = re.sub(r"\s+", " ", filename).strip()
-
-        logging.log(logging.INFO, r"._.")
 
         alt_matches = set(alt.split(" ")).intersection(set(self.keywords))
         title_matches = set(title.split(" ")).intersection(set(self.keywords))

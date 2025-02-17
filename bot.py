@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from dotenv import load_dotenv
 
-from crawler import CryptoCrawler
+from crawler import Crawler
 
 load_dotenv()
 
@@ -26,7 +26,7 @@ dp = Dispatcher()
 global_keywords = set(["cat", "dog"])
 
 # Global variable to control the parsing process
-crawler: CryptoCrawler | None = None
+crawler: Crawler | None = None
 
 
 class AddKeywordState(StatesGroup):
@@ -133,7 +133,7 @@ async def start_search_button(message: Message):
     # text_to_keyword can be requested additionally, but here we will make it empty
     text_to_keyword = ""
     keywords_list = list(global_keywords)
-    crawler = CryptoCrawler(keywords_list, text_to_keyword)
+    crawler = Crawler(keywords_list, text_to_keyword)
     crawler.start_parsing()
 
     await message.answer(
