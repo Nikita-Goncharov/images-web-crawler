@@ -1,7 +1,9 @@
+.env
+celerybeat-*
+
 .idea/
 __pycache__/
 
-.env
 logos/
 logos_*/
 parsed_images/

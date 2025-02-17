@@ -97,7 +97,7 @@ def remove_duplicates(path):
     directory_list = os.listdir(path)
     for logo_dir in directory_list:
         seen_hashes = {}
-        image_dir_path = os.join(path, logo_dir)
+        image_dir_path = os.path.join(path, logo_dir)
         for filename in os.listdir(image_dir_path):
             filepath = os.path.join(image_dir_path, filename)
             if os.path.isfile(filepath):
