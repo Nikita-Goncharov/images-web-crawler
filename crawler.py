@@ -87,14 +87,13 @@ class Crawler:
             if not src:
                 continue
 
-            # make absolute URL
-            absolute_src = urljoin(page_url, src)
-            filename = absolute_src.split("/")[-1].lower()
+            filename = src.split("/")[-1].lower()
             filename, file_ext = os.path.splitext(filename)
 
             found_keywords = self.image_find_keyword(img_tag, filename)
             if found_keywords:
                 first_found, *_ = found_keywords
+                absolute_src = urljoin(page_url, src)
                 download_image.delay(absolute_src, f"parsed_images/{first_found}")
 
         for a_tag in soup.find_all("a"):
@@ -106,7 +105,7 @@ class Crawler:
             links.add(abs_url)
         return links
 
-    async def crawl_site(self, url, shared_data):
+    async def crawl_site(self, shared_data):
         while self.to_visit and shared_data["running"]:
             current_url, *_ = self.to_visit
 
@@ -133,8 +132,8 @@ class Crawler:
     async def start_crawling(self, shared_data):
         async_tasks = []
 
-        for url in self.urls:
-            task = asyncio.create_task(self.crawl_site(url, shared_data))
+        for _ in self.urls:
+            task = asyncio.create_task(self.crawl_site(shared_data))
             async_tasks.append(task)
 
         try:

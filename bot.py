@@ -9,10 +9,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from dotenv import load_dotenv
 
-from crawler import Crawler
-
 load_dotenv()
-
 
 API_TOKEN = os.getenv("BOT_API_TOKEN")
 
@@ -26,7 +23,7 @@ dp = Dispatcher()
 global_keywords = set(["cat", "dog"])
 
 # Global variable to control the parsing process
-crawler: Crawler | None = None
+crawler = None
 
 
 class AddKeywordState(StatesGroup):
@@ -208,4 +205,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    from crawler import Crawler
     asyncio.run(main())

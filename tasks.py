@@ -2,13 +2,18 @@ import hashlib
 import io
 import logging
 import os
+import asyncio
 from datetime import datetime
 
 import cairosvg
 import requests
 from PIL import Image
+from dotenv import load_dotenv
 
 from celery_app import app
+from utils import send_bot_message
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -76,6 +81,7 @@ def download_image(absolute_src: str, save_dir: str = "parsed_images"):
             os.remove(path)
         else:
             logging.log(logging.INFO, "Found image for saving")
+            send_bot_message(os.getenv("CHAT_ID"), path, "Found keyword in image")
     except Exception as ex:
         logging.log(logging.INFO, f"Error downloading: {absolute_src}: {ex}")
 

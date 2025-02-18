@@ -7,3 +7,4 @@ httpx~=0.28.0
 celery~=5.4.0
 cairosvg~=2.7.0
 redis~=5.2.0
+pyTelegramBotAPI~=4.26.0
