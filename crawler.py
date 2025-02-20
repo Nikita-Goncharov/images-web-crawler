@@ -9,6 +9,7 @@ import httpx
 from bs4 import BeautifulSoup
 from bs4.element import PageElement
 
+from celery_app import app
 from tasks import download_image
 
 
@@ -49,6 +50,7 @@ class Crawler:
             logging.log(logging.INFO, "Stop Crawling")
             self.shared_data["running"] = False
             self.parsing_process.join()
+            app.control.purge()  # clear queue for downloading images
 
     def image_find_keyword(self, img_tag: PageElement, filename: str) -> set:
         # Check alt, title or file name
@@ -108,12 +110,12 @@ class Crawler:
     async def crawl_site(self, shared_data):
         while self.to_visit and shared_data["running"]:
             current_url, *_ = self.to_visit
+            self.to_visit.remove(current_url)
 
             if current_url in self.visited:
                 continue
 
             self.visited.add(current_url)
-            self.to_visit.remove(current_url)
             logging.log(logging.INFO, f"Crawling: {current_url}")
 
             # parse images by keywords & find all links on page and append in to_visit not visited

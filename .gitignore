@@ -6,5 +6,6 @@ __pycache__/
 
 logos/
 logos_*/
+*.zip
 parsed_images/
 resulted_set/

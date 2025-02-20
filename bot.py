@@ -1,4 +1,3 @@
-import os
 import asyncio
 import logging
 
@@ -7,12 +6,11 @@ from aiogram.filters import Command
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from dotenv import load_dotenv
 
-load_dotenv()
+from config import config
 
-API_TOKEN = os.getenv("BOT_API_TOKEN")
 
+API_TOKEN = config.API_TOKEN
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=API_TOKEN)
@@ -152,6 +150,13 @@ async def stop_search_button(message: Message):
         crawler.stop_parsing()
         crawler = None
     await message.answer("Crowling stopped.", reply_markup=kb_main, parse_mode="html")
+    
+    archive_url = f"http://{config.SERVER_HOST}:{config.SERVER_PORT}/get_images_archive"
+    await message.answer(
+        f"📁 Archive with parsed images you can get here: {archive_url}",
+        reply_markup=kb_main,
+        parse_mode="html",
+    )
 
 
 @dp.message(AddKeywordState.waiting_for_keyword)

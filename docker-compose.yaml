@@ -5,6 +5,14 @@ services:
     volumes:
       - ./:/app
 
+  flask_server:
+    build: .
+    command: python server.py
+    ports:
+    - 5000:5000
+    volumes:
+      - ./:/app
+
   celery_worker:
     build: .
     command: celery -A tasks worker -B --loglevel=INFO -c 10

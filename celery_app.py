@@ -1,11 +1,10 @@
-import os
-
 from celery import Celery
-from dotenv import load_dotenv
 
-load_dotenv()
+from config import config
 
-app = Celery("save_images", broker=os.getenv("CELERY_BROKER_URL"))
+API_TOKEN = config.API_TOKEN
+
+app = Celery("save_images", broker=config.CELERY_BROKER_URL)
 app.conf.broker_connection_retry_on_startup = True
 app.conf.beat_schedule = {
     "add-every-20-seconds": {

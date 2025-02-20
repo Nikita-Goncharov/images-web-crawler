@@ -2,18 +2,14 @@ import hashlib
 import io
 import logging
 import os
-import asyncio
 from datetime import datetime
 
 import cairosvg
 import requests
 from PIL import Image
-from dotenv import load_dotenv
+
 
 from celery_app import app
-from utils import send_bot_message
-
-load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -81,7 +77,6 @@ def download_image(absolute_src: str, save_dir: str = "parsed_images"):
             os.remove(path)
         else:
             logging.log(logging.INFO, "Found image for saving")
-            send_bot_message(os.getenv("CHAT_ID"), path, "Found keyword in image")
     except Exception as ex:
         logging.log(logging.INFO, f"Error downloading: {absolute_src}: {ex}")
 
@@ -100,20 +95,25 @@ def file_md5(path, chunk_size=8192):
 
 @app.task
 def remove_duplicates(path):
+    if os.path.exists(path):
+        return
+    
     directory_list = os.listdir(path)
     for logo_dir in directory_list:
         seen_hashes = {}
         image_dir_path = os.path.join(path, logo_dir)
         for filename in os.listdir(image_dir_path):
             filepath = os.path.join(image_dir_path, filename)
-            if os.path.isfile(filepath):
-                file_hash = file_md5(filepath)
-                if file_hash in seen_hashes:
-                    # Duplicate detected
-                    print(
-                        f"[DUPLICATE] Removing {filepath} (same as {seen_hashes[file_hash]})"
-                    )
-                    os.remove(filepath)
-                else:
-                    # First time we see this hash
-                    seen_hashes[file_hash] = filepath
+            if not os.path.isfile(filepath):
+                continue
+            
+            file_hash = file_md5(filepath)
+            if file_hash in seen_hashes:
+                # Duplicate detected
+                print(
+                    f"[DUPLICATE] Removing {filepath} (same as {seen_hashes[file_hash]})"
+                )
+                os.remove(filepath)
+            else:
+                # First time we see this hash
+                seen_hashes[file_hash] = filepath
