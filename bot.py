@@ -154,11 +154,11 @@ async def stop_search_button(message: Message):
         crawler = None
     await message.answer("Crowling stopped.", reply_markup=kb_main, parse_mode="html")
     
-    archive_url = f"http://{config.SERVER_HOST_HUMANABLE}:{config.SERVER_PORT}/get_images_archive"
+    archive_url = f'<a href="http://{config.SERVER_HOST_HUMANABLE}:{config.SERVER_PORT}/get_images_archive">Download</a>'
     await message.answer(
         f"📁 Archive with parsed images you can get here: {archive_url}",
         reply_markup=kb_main,
-        parse_mode="html",
+        parse_mode="HTML",
     )
 
 
