@@ -11,7 +11,10 @@ from config import config
 
 
 API_TOKEN = config.API_TOKEN
-logging.basicConfig(level=logging.INFO)
+
+logging.basicConfig(filename="bot_logs.log", level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
@@ -44,12 +47,12 @@ kb_main = ReplyKeyboardMarkup(
 
 @dp.startup()
 async def on_startup():
-    logging.info("Bot is starting up...")
+    logger.info("Bot is starting up...")
 
 
 @dp.shutdown()
 async def on_shutdown():
-    logging.info("Bot is shutting down...")
+    logger.info("Bot is shutting down...")
 
 
 @dp.message(Command("start"))
@@ -151,7 +154,7 @@ async def stop_search_button(message: Message):
         crawler = None
     await message.answer("Crowling stopped.", reply_markup=kb_main, parse_mode="html")
     
-    archive_url = f"http://{config.SERVER_HOST}:{config.SERVER_PORT}/get_images_archive"
+    archive_url = f"http://{config.SERVER_HOST_HUMANABLE}:{config.SERVER_PORT}/get_images_archive"
     await message.answer(
         f"📁 Archive with parsed images you can get here: {archive_url}",
         reply_markup=kb_main,

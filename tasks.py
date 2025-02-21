@@ -11,7 +11,7 @@ from PIL import Image
 
 from celery_app import app
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def render_svg_to_png_bytes(svg_path, dpi=96):
@@ -47,13 +47,13 @@ def is_image_valid(absolute_src: str) -> bool:
         if w > 240 and h > 240:
             return True
     except Exception as ex:
-        logging.log(logging.INFO, f"Exception when image validation: {str(ex)}")
+        logger.error(f"Exception when image validation: {str(ex)}")
 
     return False
 
 
 @app.task
-def download_image(absolute_src: str, save_dir: str = "parsed_images"):
+def download_image(absolute_src: str, save_dir: str):
     try:
         os.makedirs(save_dir, exist_ok=True)
         _, file_ext = os.path.splitext(absolute_src)  # get file extension from URL
@@ -76,9 +76,9 @@ def download_image(absolute_src: str, save_dir: str = "parsed_images"):
         if not is_image_valid(path):
             os.remove(path)
         else:
-            logging.log(logging.INFO, "Found image for saving")
+            logger.info("Found image for saving")
     except Exception as ex:
-        logging.log(logging.INFO, f"Error downloading: {absolute_src}: {ex}")
+        logger.error(f"Error downloading: {absolute_src}: {ex}")
 
 
 def file_md5(path, chunk_size=8192):
@@ -95,7 +95,7 @@ def file_md5(path, chunk_size=8192):
 
 @app.task
 def remove_duplicates(path):
-    if os.path.exists(path):
+    if not os.path.exists(path):
         return
     
     directory_list = os.listdir(path)
@@ -110,9 +110,7 @@ def remove_duplicates(path):
             file_hash = file_md5(filepath)
             if file_hash in seen_hashes:
                 # Duplicate detected
-                print(
-                    f"[DUPLICATE] Removing {filepath} (same as {seen_hashes[file_hash]})"
-                )
+                logger.info(f"[DUPLICATE] Removing {filepath} (same as {seen_hashes[file_hash]})")
                 os.remove(filepath)
             else:
                 # First time we see this hash

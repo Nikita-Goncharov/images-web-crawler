@@ -11,7 +11,10 @@ from bs4.element import PageElement
 
 from celery_app import app
 from tasks import download_image
+from config import config
 
+# logging.getLogger("httpx").setLevel(logging.ERROR)  # disable httpx INFO logs
+logger = logging.getLogger(__name__)
 
 class Crawler:
     def __init__(self, keywords: list[str], text_to_keyword: str):
@@ -38,7 +41,7 @@ class Crawler:
         self.httpx_client = httpx.AsyncClient(headers=headers)  # , max_redirects=5
 
     def start_parsing(self):
-        logging.log(logging.INFO, "Start Crawling")
+        logger.info("Start Crawling")
         self.shared_data["running"] = True
         self.parsing_process = Process(
             target=self._run_async, args=(self.start_crawling, self.shared_data)
@@ -47,7 +50,7 @@ class Crawler:
 
     def stop_parsing(self):
         if isinstance(self.parsing_process, Process):
-            logging.log(logging.INFO, "Stop Crawling")
+            logger.info("Stop Crawling")
             self.shared_data["running"] = False
             self.parsing_process.join()
             app.control.purge()  # clear queue for downloading images
@@ -77,9 +80,7 @@ class Crawler:
             )
             response.raise_for_status()
         except Exception as ex:
-            logging.log(
-                logging.INFO, f"Error while loading page {page_url}, ex: {str(ex)}"
-            )
+            logger.error(f"Error while loading page {page_url}, ex: {str(ex)}")
             return links
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -96,7 +97,7 @@ class Crawler:
             if found_keywords:
                 first_found, *_ = found_keywords
                 absolute_src = urljoin(page_url, src)
-                download_image.delay(absolute_src, f"parsed_images/{first_found}")
+                download_image.delay(absolute_src, f"{config.SAVE_IMAGES_PATH}/{first_found}")
 
         for a_tag in soup.find_all("a"):
             href = a_tag.get("href")
@@ -116,7 +117,7 @@ class Crawler:
                 continue
 
             self.visited.add(current_url)
-            logging.log(logging.INFO, f"Crawling: {current_url}")
+            logger.info(f"Crawling: {current_url}")
 
             # parse images by keywords & find all links on page and append in to_visit not visited
             links = await self.scrape_images(current_url)
@@ -140,8 +141,6 @@ class Crawler:
 
         try:
             await asyncio.gather(*async_tasks, return_exceptions=True)
-            logging.log(
-                logging.INFO, f"\nFinished crawling. Visited {len(self.visited)} pages."
-            )
+            logger.info(f"\nFinished crawling. Visited {len(self.visited)} pages.")
         except Exception as ex:
-            logging.log(logging.ERROR, f"\nError while crawling: {str(ex)}")
+            logger.error(f"\nError while crawling: {str(ex)}")

@@ -9,7 +9,11 @@ class Config:
     CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "")
     
     SERVER_HOST = os.getenv("SERVER_HOST", "")
-    SERVER_HOST = "localhost" if os.getenv("SERVER_HOST", "") == "0.0.0.0" else os.getenv("SERVER_HOST", "")
+    SERVER_HOST_HUMANABLE = "localhost" if os.getenv("SERVER_HOST", "") == "0.0.0.0" else os.getenv("SERVER_HOST", "")
     SERVER_PORT = os.getenv("SERVER_PORT", 0)
+    
+    SAVE_IMAGES_PATH = os.getenv("SAVE_IMAGES_PATH", "images")
+    IMAGES_ARCHIVE_NAME = os.getenv("IMAGES_ARCHIVE_NAME", "images")
+    
     
 config = Config()

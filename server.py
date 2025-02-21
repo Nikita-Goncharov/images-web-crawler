@@ -1,23 +1,26 @@
 import os
 import shutil
+import logging
+
 from flask import Flask, send_file
 
 from config import config
 
 app = Flask(__name__)
+logger = logging.getLogger(__name__)
 
-PARSED_IMAGES_DIR = "./parsed_images/"  # Директорія з зображеннями
-ARCHIVE_PATH = "./parsed_images.zip"   # Шлях до архіву
+
+PARSED_IMAGES_DIR = config.SAVE_IMAGES_PATH
+ARCHIVE_PATH = f"./{config.IMAGES_ARCHIVE_NAME}.zip"
 
 @app.route("/get_images_archive")
 def images_archive():
-    """Створює та віддає архів із зображеннями"""
     if not os.path.exists(PARSED_IMAGES_DIR) or not os.listdir(PARSED_IMAGES_DIR):
+        logger.error("Found no images dir, cannot make archive")
         return "No images found", 404
 
-    # Створюємо новий архів
-    shutil.make_archive("parsed_images", "zip", PARSED_IMAGES_DIR)
-    
+    shutil.make_archive(config.IMAGES_ARCHIVE_NAME, "zip", PARSED_IMAGES_DIR)
+    logger.info("Archive was made")
     return send_file(ARCHIVE_PATH, as_attachment=True)
 
 

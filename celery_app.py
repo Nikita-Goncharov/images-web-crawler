@@ -10,6 +10,6 @@ app.conf.beat_schedule = {
     "add-every-20-seconds": {
         "task": "tasks.remove_duplicates",
         "schedule": 20.0,
-        "args": ("parsed_images/",),
+        "args": (config.SAVE_IMAGES_PATH,),
     },
 }
