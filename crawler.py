@@ -13,7 +13,7 @@ from celery_app import app
 from tasks import download_image
 from config import config
 
-# logging.getLogger("httpx").setLevel(logging.ERROR)  # disable httpx INFO logs
+logging.getLogger("httpx").setLevel(logging.ERROR)  # disable httpx INFO logs
 logger = logging.getLogger(__name__)
 
 class Crawler:

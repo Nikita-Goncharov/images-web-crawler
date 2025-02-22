@@ -41,6 +41,7 @@ def get_image_size(image_path, dpi=96):
 def is_image_valid(absolute_src: str) -> bool:
     try:
         if ".webp" in absolute_src:  # do not download .webp images
+            logger.info("Image is not valid. '.webp' extension in image")
             return False
 
         w, h = get_image_size(absolute_src)
@@ -48,7 +49,8 @@ def is_image_valid(absolute_src: str) -> bool:
             return True
     except Exception as ex:
         logger.error(f"Exception when image validation: {str(ex)}")
-
+    
+    logger.info("Image is not valid. small image size")
     return False
 
 
@@ -76,7 +78,7 @@ def download_image(absolute_src: str, save_dir: str):
         if not is_image_valid(path):
             os.remove(path)
         else:
-            logger.info("Found image for saving")
+            logger.info("Image saved")
     except Exception as ex:
         logger.error(f"Error downloading: {absolute_src}: {ex}")
 
