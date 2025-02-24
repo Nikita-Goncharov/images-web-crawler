@@ -15,12 +15,14 @@ services:
 
   celery_worker:
     build: .
-    command: celery -A tasks worker -B --loglevel=INFO -c 10
+    command: celery -A tasks worker -B --loglevel=INFO -c 10 -f celery_tasks_logs.log
     volumes:
       - ./:/app
 
   redis:
     image: redis:latest
 
-    expose:
-      - "6379"
+    ports:
+    - 6379:6379
+    # expose:
+    #   - "6379"

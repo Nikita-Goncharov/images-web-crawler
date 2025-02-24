@@ -9,7 +9,6 @@ from config import config
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
 
-
 PARSED_IMAGES_DIR = config.SAVE_IMAGES_PATH
 ARCHIVE_PATH = f"./{config.IMAGES_ARCHIVE_NAME}.zip"
 
@@ -21,6 +20,7 @@ def images_archive():
     
     shutil.make_archive(config.IMAGES_ARCHIVE_NAME, "zip", PARSED_IMAGES_DIR)
     shutil.rmtree(config.SAVE_IMAGES_PATH)
+    
     logger.info("Archive was made")
     return send_file(ARCHIVE_PATH, as_attachment=True)
 

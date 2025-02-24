@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from multiprocessing import Process, Manager
 
 import httpx
+import redis
 from bs4 import BeautifulSoup
 from bs4.element import PageElement
 
@@ -15,6 +16,7 @@ from config import config
 
 logging.getLogger("httpx").setLevel(logging.ERROR)  # disable httpx INFO logs
 logger = logging.getLogger(__name__)
+redis_client = redis.Redis("redis")
 
 class Crawler:
     def __init__(self, keywords: list[str], text_to_keyword: str):
@@ -80,7 +82,7 @@ class Crawler:
             )
             response.raise_for_status()
         except Exception as ex:
-            logger.error(f"Error while loading page {page_url}, ex: {str(ex)}")
+            logger.error(f"Error while loading page {page_url}, ex: {str(ex)}, exception class: {ex.__class__}")
             return links
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -125,6 +127,7 @@ class Crawler:
             for link in links:
                 if link not in self.visited:
                     self.to_visit.add(link)
+            redis_client.incr("crawled_links_count")
 
     def _run_async(self, coro_fn, shared_data):
         """

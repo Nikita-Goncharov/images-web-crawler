@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+import redis
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import (
@@ -30,6 +31,8 @@ logger = logging.getLogger(__name__)
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
+redis_client = redis.Redis("redis")
+
 
 # Змінні зберігають основні ключові слова та додаткові тексти
 global_keywords = set(["cat", "dog"])  # Приклад початкових слів
@@ -309,6 +312,9 @@ async def stop_search_button(message: Message):
         crawler = None
 
     await message.answer("Crawling stopped.", reply_markup=kb_main, parse_mode="html")
+    crawled_links_count = redis_client.get("crawled_links_count").decode()
+    saved_images_count = redis_client.get("saved_images_count").decode()
+    await message.answer(f"Statistics: \nCrawled links count: {crawled_links_count}\nSaved images count: {saved_images_count}")
 
     # Посилання на архів зображень (приклад формування)
     archive_url = f'<a href="http://{config.SERVER_HOST_HUMANABLE}:{config.SERVER_PORT}/get_images_archive">Download</a>'
@@ -317,6 +323,12 @@ async def stop_search_button(message: Message):
         reply_markup=kb_main,
         parse_mode="HTML",
     )
+    
+    # remove unique images hashes
+    image_hashes = redis_client.smembers("image_hashes")
+    redis_client.srem("image_hashes", *image_hashes)
+    redis_client.set("crawled_links_count", 0)
+    redis_client.set("saved_images_count", 0)
 
 
 # ---- Точка входу в бота ----
