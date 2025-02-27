@@ -33,16 +33,15 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 redis_client = redis.Redis("redis")
 
-
-# Змінні зберігають основні ключові слова та додаткові тексти
-global_keywords = set(["cat", "dog"])  # Приклад початкових слів
+# Variables storing main keywords and additional text
+global_keywords = set([])
 global_additional_text = ""
 
-# Глобальна змінна для керування вашим парсером
+# Global variable to control the crawler
 crawler = None
 
 
-# ---- Оголошення станів ----
+# ---- Defining states ----
 class AddKeywordState(StatesGroup):
     waiting_for_keyword = State()
 
@@ -53,7 +52,7 @@ class AddAdditionalTextState(StatesGroup):
     waiting_for_text = State()
 
 
-# ---- Клавіатури ----
+# ---- Keyboards ----
 kb_main = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Keywords"), KeyboardButton(text="Additional text")],
@@ -62,7 +61,7 @@ kb_main = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
-# Інлайн-клавіатура для керування списком keywords
+# Inline keyboard for managing keywords
 inline_kb_keywords = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -72,7 +71,7 @@ inline_kb_keywords = InlineKeyboardMarkup(
     ]
 )
 
-# Інлайн-клавіатура для керування списком додаткового тексту
+# Inline keyboard for managing additional text
 inline_kb_additional_text = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -83,7 +82,7 @@ inline_kb_additional_text = InlineKeyboardMarkup(
 )
 
 
-# ---- Хендлери на запуск і завершення бота ----
+# ---- Bot startup and shutdown handlers ----
 @dp.startup()
 async def on_startup():
     logger.info("Bot is starting up...")
@@ -93,30 +92,30 @@ async def on_shutdown():
     logger.info("Bot is shutting down...")
 
 
-# ---- Старт / Головне меню ----
+# ---- Start / Main Menu ----
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
     """
-    Виводить привітання і головну клавіатуру.
+    Sends a welcome message and displays the main keyboard.
     """
     await message.answer(
         text=(
             "Hello! This is an image search bot.\n\n"
             "Use the menu below:\n"
-            "1) Keywords - перегляд та зміна ключових слів\n"
-            "2) Additional text - перегляд та зміна додаткових текстів\n"
-            "3) Start Search - запуск пошуку\n"
-            "4) Stop Search - зупинка пошуку"
+            "1) Keywords - view and modify keywords\n"
+            "2) Additional text - view and modify additional text\n"
+            "3) Start Search - start the search\n"
+            "4) Stop Search - stop the search"
         ),
         reply_markup=kb_main,
     )
 
 
-# ---- Керування Keywords (натискається кнопка "Keywords") ----
+# ---- Managing Keywords (button "Keywords" is pressed) ----
 @dp.message(F.text.lower() == "keywords")
 async def show_keywords(message: Message):
     """
-    Показати поточні keywords та інлайн-клавіатуру для додавання/видалення.
+    Displays current keywords and an inline keyboard for adding/removing them.
     """
     if not global_keywords:
         await message.answer(
@@ -135,7 +134,7 @@ async def show_keywords(message: Message):
 @dp.callback_query(F.data == "add_keyword")
 async def callback_add_keyword(callback: CallbackQuery, state: FSMContext):
     """
-    Запитуємо в користувача ключове слово для додавання.
+    Requests a keyword from the user to add.
     """
     await callback.message.answer("Enter a keyword to add:")
     await state.set_state(AddKeywordState.waiting_for_keyword)
@@ -144,7 +143,7 @@ async def callback_add_keyword(callback: CallbackQuery, state: FSMContext):
 @dp.callback_query(F.data == "remove_keyword")
 async def callback_remove_keyword(callback: CallbackQuery, state: FSMContext):
     """
-    Запитуємо в користувача ключове слово для видалення.
+    Requests a keyword from the user to remove.
     """
     await callback.message.answer("Enter a keyword to remove:")
     await state.set_state(RemoveKeywordState.waiting_for_keyword)
@@ -153,7 +152,7 @@ async def callback_remove_keyword(callback: CallbackQuery, state: FSMContext):
 @dp.message(AddKeywordState.waiting_for_keyword)
 async def process_add_keyword(message: Message, state: FSMContext):
     """
-    Обробка введеного ключового слова для додавання.
+    Processes the entered keyword to add.
     """
     word = message.text.strip().lower()
     if word in global_keywords:
@@ -169,14 +168,14 @@ async def process_add_keyword(message: Message, state: FSMContext):
             parse_mode="html",
             reply_markup=kb_main
         )
-
+    
     await state.clear()
 
 
 @dp.message(RemoveKeywordState.waiting_for_keyword)
 async def process_remove_keyword(message: Message, state: FSMContext):
     """
-    Обробка введеного ключового слова для видалення.
+    Processes the entered keyword to remove.
     """
     word = message.text.strip().lower()
     if word in global_keywords:
@@ -192,146 +191,11 @@ async def process_remove_keyword(message: Message, state: FSMContext):
             parse_mode="html",
             reply_markup=kb_main
         )
-
+    
     await state.clear()
 
 
-@dp.message(F.text.lower() == "additional text")
-async def show_additional_text(message: Message):
-    """
-    Показати поточний додатковий текст та інлайн-клавіатуру для додавання/видалення.
-    """
-    if not global_additional_text:
-        await message.answer(
-            "No additional text added.",
-            reply_markup=inline_kb_additional_text
-        )
-    else:
-        await message.answer(
-            f"Current additional text:\n<b>{global_additional_text}</b>",
-            reply_markup=inline_kb_additional_text,
-            parse_mode="html"
-        )
-
-
-@dp.callback_query(F.data == "add_text")
-async def callback_add_text(callback: CallbackQuery, state: FSMContext):
-    """
-    Запитуємо у користувача рядок, який треба додати до додаткових текстів.
-    """
-    await callback.message.answer("Enter an additional text to add:")
-    await state.set_state(AddAdditionalTextState.waiting_for_text)
-
-
-@dp.callback_query(F.data == "remove_text")
-async def callback_remove_text(callback: CallbackQuery):
-    """
-    Видаляємо additional text.
-    """
-    global global_additional_text
-    global_additional_text = ""
-    
-    await callback.message.answer(
-        "Removed additional text.",
-        parse_mode="html",
-        reply_markup=kb_main
-    )
-
-
-@dp.message(AddAdditionalTextState.waiting_for_text)
-async def process_add_text(message: Message, state: FSMContext):
-    """
-    Обробка введеного рядка для додавання в додаткові тексти.
-    """
-    global global_additional_text
-    
-    text_item = message.text.strip().lower()
-    if text_item == global_additional_text:
-        await message.answer(
-            f"Text <b>{text_item}</b> already in the list.",
-            parse_mode="html",
-            reply_markup=kb_main
-        )
-    else:
-        global_additional_text = text_item
-        await message.answer(
-            f"Added <b>{text_item}</b> as the additional text.",
-            parse_mode="html",
-            reply_markup=kb_main
-        )
-
-    await state.clear()
-
-
-# ---- Запуск та зупинка пошуку ----
-@dp.message(F.text.lower() == "start search")
-async def start_search_button(message: Message):
-    """
-    Запуск парсера з наявним списком keywords і additional text.
-    """
-    global crawler
-
-    if not global_keywords:
-        await message.answer(
-            "There are no keywords. You should add some first.",
-            reply_markup=kb_main,
-            parse_mode="html",
-        )
-        return
-
-    # Якщо crawler вже запущений - зупиняємо його перед повторним запуском
-    if crawler is not None:
-        crawler.stop_parsing()
-        crawler = None
-    
-    keywords_list = list(global_keywords)
-
-    # Запускаємо власний парсер (Crawler), підставте свій імпорт/код
-    from crawler import Crawler  # Можна винести вгору, залежно від вашої структури
-    crawler = Crawler(keywords_list, global_additional_text)
-    crawler.start_parsing()
-
-    await message.answer(
-        "Crawling started.\n"
-        f"Keywords: {', '.join(keywords_list)}\n"
-        f"Additional text: {global_additional_text if global_additional_text else 'No additional text'}\n"
-        "To stop crawling press: Stop Search",
-        reply_markup=kb_main,
-        parse_mode="html",
-    )
-
-
-@dp.message(F.text.lower() == "stop search")
-async def stop_search_button(message: Message):
-    """
-    Зупинка парсера.
-    """
-    global crawler
-    if crawler is not None:
-        crawler.stop_parsing()
-        crawler = None
-
-    await message.answer("Crawling stopped.", reply_markup=kb_main, parse_mode="html")
-    crawled_links_count = redis_client.get("crawled_links_count").decode()
-    saved_images_count = redis_client.get("saved_images_count").decode()
-    await message.answer(f"Statistics: \nCrawled links count: {crawled_links_count}\nSaved images count: {saved_images_count}")
-
-    # Посилання на архів зображень (приклад формування)
-    archive_url = f'<a href="http://{config.SERVER_HOST_HUMANABLE}:{config.SERVER_PORT}/get_images_archive">Download</a>'
-    await message.answer(
-        f"📁 Archive with parsed images you can get here: {archive_url}",
-        reply_markup=kb_main,
-        parse_mode="HTML",
-    )
-    
-    # remove unique images hashes
-    image_hashes = redis_client.smembers("image_hashes")
-    redis_client.srem("image_hashes", *image_hashes)
-    redis_client.set("crawled_links_count", 0)
-    redis_client.set("saved_images_count", 0)
-
-
-# ---- Точка входу в бота ----
+# ---- Entry point for the bot ----
 async def main():
     await dp.start_polling(bot)
 

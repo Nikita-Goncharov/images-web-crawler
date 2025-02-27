@@ -30,7 +30,7 @@ class Crawler:
         ]
         self.parsing_process: None | Process = None
         self.manager = Manager()
-        self.shared_data = self.manager.dict()
+        self.shared_data = self.manager.dict()  # -_-
         self.shared_data["running"] = False
 
         self.visited = set()
@@ -51,7 +51,7 @@ class Crawler:
         self.parsing_process.start()
 
     def stop_parsing(self):
-        if isinstance(self.parsing_process, Process):
+        if self.parsing_process is not None:
             logger.info("Stop Crawling")
             self.shared_data["running"] = False
             self.parsing_process.join()

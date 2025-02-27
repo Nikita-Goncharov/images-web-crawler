@@ -2,6 +2,9 @@ services:
   tg_bot_crawler:
     build: .
     command: python bot.py
+    depends_on:
+      - redis
+      - celery_worker
     volumes:
       - ./:/app
 
@@ -18,6 +21,8 @@ services:
     command: celery -A tasks worker -B --loglevel=INFO -c 10 -f celery_tasks_logs.log
     volumes:
       - ./:/app
+    depends_on:
+      - redis
 
   redis:
     image: redis:latest
