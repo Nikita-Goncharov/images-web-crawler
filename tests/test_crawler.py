@@ -48,7 +48,6 @@ async def test_image_find_keyword():
     assert "cat" in found
 
 
-@pytest.mark.asyncio
 @patch("crawler.Process")
 def test_crawler_start_parsing(mock_process):
     """Check that start_parsing() creates a process and sets running = True."""
@@ -58,7 +57,6 @@ def test_crawler_start_parsing(mock_process):
     mock_process.assert_called_once()
 
 
-@pytest.mark.asyncio
 @patch("crawler.Process")
 @patch("crawler.app.control.purge", return_value=0)
 def test_crawler_stop_parsing(mock_celery_purge, mock_process):

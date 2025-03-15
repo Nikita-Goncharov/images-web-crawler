@@ -1,6 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch
-from aiogram.types import Message
+from unittest.mock import Mock, AsyncMock, patch
 
 from bot import (
     show_keywords,
@@ -16,13 +15,15 @@ from bot import (
 @pytest.mark.asyncio
 async def test_cmd_start():
     """Check that /start sends the expected response."""
-    message = AsyncMock(spec=Message)
+    message = AsyncMock()
     message.text = "/start"
+    message.answer = AsyncMock()
 
     await cmd_start(message)
     message.answer.assert_called_once()
     args, kwargs = message.answer.call_args
-    assert "Hello! This is an image search bot." in args[0]
+    print(args, kwargs)
+    assert "Hello! This is an image search bot." in kwargs["text"]
 
 
 @pytest.mark.asyncio
@@ -32,8 +33,9 @@ async def test_show_keywords_empty():
     backup_keywords = global_keywords.copy()
     global_keywords.clear()
 
-    message = AsyncMock(spec=Message)
+    message = AsyncMock()
     message.text = "keywords"
+    message.answer = AsyncMock()
 
     await show_keywords(message)
     message.answer.assert_called_once()
@@ -50,8 +52,9 @@ async def test_show_keywords_non_empty():
     global_keywords.clear()
     global_keywords.update(["cat", "dog"])
 
-    message = AsyncMock(spec=Message)
+    message = AsyncMock()
     message.text = "keywords"
+    message.answer = AsyncMock()
 
     await show_keywords(message)
     message.answer.assert_called_once()
@@ -69,8 +72,9 @@ async def test_process_add_keyword():
     backup_keywords = global_keywords.copy()
     global_keywords.clear()
 
-    message = AsyncMock(spec=Message)
+    message = AsyncMock()
     message.text = "new_keyword"
+    message.answer = AsyncMock()
 
     state = AsyncMock()
     state.set_state = AsyncMock()
@@ -93,8 +97,9 @@ async def test_process_remove_keyword():
     global_keywords.clear()
     global_keywords.update(["cat", "dog"])
 
-    message = AsyncMock(spec=Message)
+    message = AsyncMock()
     message.text = "cat"
+    message.answer = AsyncMock()
 
     state = AsyncMock()
 
@@ -113,7 +118,8 @@ async def test_start_search_button_no_keywords():
     backup_keywords = global_keywords.copy()
     global_keywords.clear()
 
-    message = AsyncMock(spec=Message)
+    message = AsyncMock()
+    message.answer = AsyncMock()
 
     await start_search_button(message)
     message.answer.assert_called_once()
@@ -125,11 +131,13 @@ async def test_start_search_button_no_keywords():
 
 @pytest.mark.asyncio
 @patch("bot.crawler")
-async def test_stop_search_button(mock_crawler):
+@patch("bot.redis_client")
+async def test_stop_search_button(mock_redis_client, mock_crawler):
     """Check stopping the search."""
-    message = AsyncMock(spec=Message)
+    message = AsyncMock()
+    message.answer = AsyncMock()
 
-    mock_crawler.stop_parsing = AsyncMock()
+    mock_crawler.stop_parsing = Mock()
     await stop_search_button(message)
 
     mock_crawler.stop_parsing.assert_called_once()
